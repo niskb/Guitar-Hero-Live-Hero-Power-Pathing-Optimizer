@@ -198,16 +198,39 @@ public class BPMUtils {
 						currentBPMValue = getBPMFromNoteTime(notes[i], bpmsBag);
 					}
 				}
-				BigDecimal beatsPerSecond = BigDecimal.valueOf(currentBPMValue).divide(BigDecimal.valueOf(6000),
+				BigDecimal beatsPerSecond = BigDecimal.valueOf(currentBPMValue).divide(BigDecimal.valueOf(210000),
 						MathContext.DECIMAL128);
-				BigDecimal halfBeatsPerSecond = BigDecimal.valueOf(currentBPMValue)
-						.divide(BigDecimal.valueOf(12000), MathContext.DECIMAL128)
-						.add(BigDecimal.valueOf(Math.pow(1.0, -34))); // squeezing (need to refer to engine hit window)
-				endTime = endTime.add(beatsPerSecond).add(halfBeatsPerSecond);
-				currentBeatNumber++;
+				if (isHalfNote(notes, i)) {
+					try {
+						endTime = endTime
+								.add(BigDecimal.valueOf(notes[i + 1].getTimeSignature() - notes[i].getTimeSignature()));
+					} catch (Exception e) {
+						continue;
+					}
+					continue;
+				} else {
+					endTime = endTime.add(beatsPerSecond);
+					currentBeatNumber++;
+				}
 			}
 		}
 		return (endTime.longValue() + 1);
+	}
+
+	// might be useful, code breaks if they're quarter notes in the measure
+	private static boolean isHalfNote(Note[] notes, int index) {
+		boolean isHalfNote = false;
+		try {
+			if ((BigDecimal.valueOf(notes[index + 1].getTimeSignature() - notes[index - 1].getTimeSignature())
+					.divide(BigDecimal.valueOf(notes[index].getTimeSignature() - notes[index - 1].getTimeSignature()),
+							MathContext.DECIMAL128)
+					.compareTo(BigDecimal.valueOf(2))) <= 0) {
+				isHalfNote = true;
+			}
+		} catch (Exception e) {
+			// do nothing
+		}
+		return isHalfNote;
 	}
 
 	private static long getBPMFromNoteTime(Note note, BPMBag bpmsBag) {
