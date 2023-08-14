@@ -1,5 +1,0 @@
-package model;
-
-public enum Type {
-	BLACK_1, BLACK_2, BLACK_3, WHITE_1, WHITE_2, WHITE_3, OPEN_NOTE, FORCED, HERO_POWER_PHRASE_START, NULL;
-}
